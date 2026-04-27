@@ -12,7 +12,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  background: #8b5cf6;
   border: none;
   color: white;
   font-size: 1.5rem;
@@ -35,7 +35,7 @@
   height: 500px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 0px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   margin-bottom: 16px;
   display: flex;
@@ -51,7 +51,7 @@
 }
 
 .chatHeader {
-  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  background: #8b5cf6;
   padding: 16px;
   color: white;
   display: flex;
@@ -93,7 +93,7 @@
 .message {
   max-width: 85%;
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: 0px;
   font-size: 0.9rem;
   line-height: 1.4;
   word-wrap: break-word;
@@ -127,7 +127,7 @@
   border: 1px solid var(--primary-light);
   color: var(--primary);
   padding: 8px 12px;
-  border-radius: 20px;
+  border-radius: 0px;
   font-size: 0.85rem;
   text-align: left;
   cursor: pointer;
@@ -151,7 +151,7 @@
   flex: 1;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border-radius: 0px;
   padding: 10px 14px;
   color: var(--text-primary);
   outline: none;

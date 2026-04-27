@@ -3,15 +3,16 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { Sparkles, Phone, Star, MessageSquare, Trophy, XCircle, IndianRupee, MapPin } from 'lucide-react';
 import styles from './pipeline.module.css';
 
 const STAGES = [
-  { key: 'new', label: 'New', color: '#74B9FF', icon: '✨' },
-  { key: 'contacted', label: 'Contacted', color: '#A29BFE', icon: '📞' },
-  { key: 'qualified', label: 'Qualified', color: '#FDCB6E', icon: '⭐' },
-  { key: 'negotiation', label: 'Negotiation', color: '#00D2FF', icon: '💬' },
-  { key: 'won', label: 'Won', color: '#00B894', icon: '🏆' },
-  { key: 'lost', label: 'Lost', color: '#FF6B6B', icon: '❌' },
+  { key: 'new', label: 'New', color: '#74B9FF', icon: <Sparkles size={16} /> },
+  { key: 'contacted', label: 'Contacted', color: '#A29BFE', icon: <Phone size={16} /> },
+  { key: 'qualified', label: 'Qualified', color: '#FDCB6E', icon: <Star size={16} /> },
+  { key: 'negotiation', label: 'Negotiation', color: '#00D2FF', icon: <MessageSquare size={16} /> },
+  { key: 'won', label: 'Won', color: '#00B894', icon: <Trophy size={16} /> },
+  { key: 'lost', label: 'Lost', color: '#FF6B6B', icon: <XCircle size={16} /> },
 ];
 
 export default function PipelinePage() {
@@ -171,7 +172,7 @@ export default function PipelinePage() {
                         style={{ animationDelay: `${i * 60}ms`, borderLeftColor: stage.color }}
                       >
                         <div className={styles.cardTop}>
-                          <div className={styles.cardAvatar} style={{ background: `linear-gradient(135deg, ${stage.color}, ${stage.color}88)` }}>
+                          <div className={styles.cardAvatar} style={{ background: stage.color }}>
                             {lead.full_name?.charAt(0).toUpperCase()}
                           </div>
                           <div className={styles.cardInfo}>
@@ -182,14 +183,14 @@ export default function PipelinePage() {
 
                         <div className={styles.cardMeta}>
                           {lead.budget_max > 0 && (
-                            <span className={styles.cardBudget}>💰 {formatBudget(lead.budget_max)}</span>
+                            <span className={styles.cardBudget}><IndianRupee size={12} style={{display:'inline',verticalAlign:'middle'}} /> {formatBudget(lead.budget_max)}</span>
                           )}
                           <span className={styles.cardSource}>{lead.source?.replace(/_/g, ' ')}</span>
                         </div>
 
                         {lead.preferred_location && (
                           <div className={styles.cardLocation}>
-                            📍 {lead.preferred_location}
+                            <MapPin size={12} style={{display:'inline',verticalAlign:'middle'}} /> {lead.preferred_location}
                           </div>
                         )}
 

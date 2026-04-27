@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: var(--primary);
   border-radius: var(--radius-md);
   font-size: 1.2rem;
   flex-shrink: 0;
@@ -43,10 +43,7 @@
   font-family: var(--font-display);
   font-size: 1.2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--primary-light), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
   white-space: nowrap;
 }
 
@@ -96,7 +93,7 @@
 }
 
 .active {
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.15), rgba(0, 210, 255, 0.08));
+  background: rgba(108, 92, 231, 0.1);
   color: var(--primary-light) !important;
   border: 1px solid rgba(108, 92, 231, 0.2);
 }

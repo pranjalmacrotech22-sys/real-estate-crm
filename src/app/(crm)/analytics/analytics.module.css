@@ -104,14 +104,14 @@
   flex: 1;
   height: 32px;
   background: var(--bg-elevated);
-  border-radius: 4px;
+  border-radius: 0px;
   position: relative;
   overflow: hidden;
 }
 
 .funnelBar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  background: var(--primary);
   display: flex;
   align-items: center;
   padding: 0 12px;
@@ -129,7 +129,7 @@
 .sourceIcon {
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 0px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,7 +138,7 @@
 
 .percentageBadge {
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: 0px;
   font-size: 0.7rem;
   font-weight: 700;
   background: rgba(108, 92, 231, 0.1);

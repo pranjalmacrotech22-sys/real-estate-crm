@@ -61,7 +61,7 @@
 
 .fuCard.overdue {
   border-left: 3px solid var(--danger);
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.04), var(--bg-card));
+  background: var(--bg-card);
 }
 
 .fuIcon {
@@ -131,7 +131,7 @@
 
 /* Calendar & Reminders */
 .reminderBanner {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
+  background: rgba(139, 92, 246, 0.1);
   border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: var(--radius-md);
   padding: 14px 18px;
@@ -232,7 +232,7 @@
 .eventBadge {
   font-size: 0.7rem;
   padding: 4px 6px;
-  border-radius: 4px;
+  border-radius: 0px;
   background: var(--bg-secondary);
   color: var(--text-primary);
   white-space: nowrap;

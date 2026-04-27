@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { Phone, Handshake, Home, Mail, MessageSquare, Video, ClipboardList, Bell, CalendarDays, User, Check, Pencil, Trash2 } from 'lucide-react';
 import Modal from '@/components/Modal';
 import styles from './followups.module.css';
 
@@ -135,7 +136,7 @@ export default function FollowupsPage() {
     return true;
   });
 
-  const typeIcons = { call: '📞', meeting: '🤝', site_visit: '🏠', email: '📧', whatsapp: '💬', video_call: '📹', other: '📋' };
+  const typeIcons = { call: <Phone size={16} />, meeting: <Handshake size={16} />, site_visit: <Home size={16} />, email: <Mail size={16} />, whatsapp: <MessageSquare size={16} />, video_call: <Video size={16} />, other: <ClipboardList size={16} /> };
 
   const formatDateTime = (d) => {
     const date = new Date(d);
@@ -233,7 +234,7 @@ export default function FollowupsPage() {
 
       {todaysVisits.length > 0 && (
         <div className={styles.reminderBanner}>
-          <span>🔔</span>
+          <span><Bell size={18} /></span>
           <div>
             <strong>Reminder:</strong> You have {todaysVisits.length} site visit{todaysVisits.length > 1 ? 's' : ''} scheduled for today.
           </div>
@@ -280,7 +281,7 @@ export default function FollowupsPage() {
       ) : filtered.length === 0 ? (
         <div className="card">
           <div className="empty-state">
-            <span style={{ fontSize: '3rem' }}>📅</span>
+            <span style={{ fontSize: '3rem' }}><CalendarDays size={48} /></span>
             <h3>No events found</h3>
             <p>{tab === 'overdue' ? 'Great! No overdue events' : 'Schedule an event to get started'}</p>
           </div>
@@ -296,7 +297,7 @@ export default function FollowupsPage() {
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <div className={styles.fuIcon}>
-                  {typeIcons[fu.follow_up_type] || '📋'}
+                  {typeIcons[fu.follow_up_type] || <ClipboardList size={16} />}
                 </div>
                 <div className={styles.fuBody}>
                   <div className={styles.fuTop}>
@@ -304,7 +305,7 @@ export default function FollowupsPage() {
                     <span className={`badge badge-${fu.status}`}>{fu.status}</span>
                   </div>
                   <div className={styles.fuMeta}>
-                    <span>👤 {fu.leads?.full_name || 'Unknown'}</span>
+                    <span><User size={12} style={{display:'inline',verticalAlign:'middle'}} /> {fu.leads?.full_name || 'Unknown'}</span>
                     <span>•</span>
                     <span>{fu.follow_up_type?.replace(/_/g, ' ')}</span>
                     <span>•</span>
@@ -322,10 +323,10 @@ export default function FollowupsPage() {
                 </div>
                 <div className={styles.fuActions}>
                   {fu.status === 'pending' && (
-                    <button className="btn btn-success btn-sm" onClick={() => markComplete(fu)} title="Mark Complete">✓</button>
+                    <button className="btn btn-success btn-sm" onClick={() => markComplete(fu)} title="Mark Complete"><Check size={14} /></button>
                   )}
-                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(fu)} title="Edit">✏️</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => deleteFu(fu.id)} title="Delete">🗑️</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(fu)} title="Edit"><Pencil size={14} /></button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => deleteFu(fu.id)} title="Delete"><Trash2 size={14} /></button>
                 </div>
               </div>
             );

@@ -2,11 +2,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { Sparkles, X, ArrowUp } from 'lucide-react';
 import styles from './AIChatWidget.module.css';
 
 const PREWRITTEN_QUESTIONS = [
   "Summarize my active leads.",
-  "Which properties are currently available?",
+  "What is the total value of my active projects?",
+  "How many units are currently available?",
   "Do I have any follow-ups today?"
 ];
 
@@ -34,22 +36,32 @@ export default function AIChatWidget() {
 
   const fetchContext = async () => {
     try {
-      const { data: leads } = await supabase.from('leads').select('status').eq('user_id', user.id);
-      const { data: props } = await supabase.from('properties').select('status, title').eq('user_id', user.id);
-      const { data: followups } = await supabase.from('follow_ups').select('follow_up_date, title').eq('user_id', user.id);
+      const { data: leads } = await supabase.from('leads').select('status');
+      const { data: followups } = await supabase.from('follow_ups').select('follow_up_date, title');
+      
+      // Builder Module Data
+      const { data: projects } = await supabase.from('projects').select('name, status');
+      const { data: units } = await supabase.from('units').select('status, base_price, bhk_type');
       
       const activeLeads = leads?.filter(l => l.status !== 'won' && l.status !== 'lost').length || 0;
       const totalLeads = leads?.length || 0;
-      const availableProps = props?.filter(p => p.status === 'available').length || 0;
       
       const today = new Date().toDateString();
       const todaysFollowups = followups?.filter(f => new Date(f.follow_up_date).toDateString() === today).length || 0;
 
+      const activeProjects = projects?.length || 0;
+      const availableUnits = units?.filter(u => u.status === 'available').length || 0;
+      const totalInventoryValue = units?.filter(u => u.status === 'available').reduce((sum, u) => sum + Number(u.base_price || 0), 0) || 0;
+
       const summary = `
 - Total Leads: ${totalLeads}
 - Active Leads: ${activeLeads}
-- Available Properties: ${availableProps}
 - Follow-ups scheduled for today: ${todaysFollowups}
+
+BUILDER INVENTORY STATUS:
+- Total Projects: ${activeProjects}
+- Available Units: ${availableUnits}
+- Total Value of Available Inventory: ₹${totalInventoryValue.toLocaleString('en-IN')}
       `;
       setCrmContext(summary);
     } catch (err) {
@@ -96,9 +108,9 @@ export default function AIChatWidget() {
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <div className={styles.headerTitle}>
-              <span>✨</span> AI Assistant
+              <Sparkles size={18} /> AI Assistant
             </div>
-            <button className={styles.closeButton} onClick={() => setIsOpen(false)}>✕</button>
+            <button className={styles.closeButton} onClick={() => setIsOpen(false)}><X size={16} /></button>
           </div>
           
           <div className={styles.chatMessages}>
@@ -150,7 +162,7 @@ export default function AIChatWidget() {
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || isLoading}
             >
-              ↑
+              <ArrowUp size={18} />
             </button>
           </div>
         </div>
@@ -158,7 +170,7 @@ export default function AIChatWidget() {
 
       {!isOpen && (
         <button className={styles.fab} onClick={() => setIsOpen(true)}>
-          ✨
+          <Sparkles size={22} />
         </button>
       )}
     </div>

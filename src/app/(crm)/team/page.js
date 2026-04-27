@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { IndianRupee, Users, TrendingUp, Briefcase } from 'lucide-react';
 import Modal from '@/components/Modal';
 import StatCard from '@/components/StatCard';
 
@@ -149,10 +150,10 @@ export default function TeamPage() {
           gap: '16px', 
           marginBottom: '32px' 
         }}>
-          <StatCard icon="💰" label="Team Revenue" value={formatCurrency(teamStats.totalRevenue)} color="success" delay={0} />
-          <StatCard icon="👥" label="Total Team Leads" value={teamStats.totalLeads} color="primary" delay={100} />
-          <StatCard icon="📈" label="Avg. Conversion" value={`${teamStats.avgConversion}%`} color="warning" delay={200} />
-          <StatCard icon="💼" label="Active Agents" value={agents.length} color="accent" delay={300} />
+          <StatCard icon={<IndianRupee size={24} />} label="Team Revenue" value={formatCurrency(teamStats.totalRevenue)} color="success" delay={0} />
+          <StatCard icon={<Users size={24} />} label="Total Team Leads" value={teamStats.totalLeads} color="primary" delay={100} />
+          <StatCard icon={<TrendingUp size={24} />} label="Avg. Conversion" value={`${teamStats.avgConversion}%`} color="warning" delay={200} />
+          <StatCard icon={<Briefcase size={24} />} label="Active Agents" value={agents.length} color="accent" delay={300} />
         </div>
       )}
 
@@ -221,7 +222,7 @@ export default function TeamPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
                         width: 34, height: 34, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                        background: 'var(--primary)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontWeight: 700, fontSize: '0.8rem', color: 'white'
                       }}>
@@ -269,12 +270,12 @@ export default function TeamPage() {
                     <td>{perf.won_leads || 0}</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 60, height: 6, background: 'var(--border-color)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ width: 60, height: 6, background: 'var(--border-color)', borderRadius: 0, overflow: 'hidden' }}>
                           <div style={{ 
                             width: `${perf.conversion_rate || 0}%`, 
                             height: '100%', 
                             background: 'var(--warning)',
-                            borderRadius: 3
+                            borderRadius: 0
                           }} />
                         </div>
                         <span style={{ fontWeight: 600 }}>{perf.conversion_rate || 0}%</span>

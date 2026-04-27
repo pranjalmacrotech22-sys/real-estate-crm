@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { Users, Handshake, IndianRupee, TrendingUp, Globe, UserPlus, Smartphone, Footprints, Phone, Megaphone, Building, ClipboardList, Crosshair, Sparkles, ArrowRight } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import styles from './dashboard.module.css';
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState([]);
   const [upcomingFollowups, setUpcomingFollowups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recentProperties, setRecentProperties] = useState([]);
   const [aiInsights, setAiInsights] = useState(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
@@ -40,6 +42,13 @@ export default function DashboardPage() {
         .order('follow_up_date', { ascending: true })
         .limit(5);
 
+      // Load properties
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
       const allLeads = leads || [];
       const allDeals = deals || [];
       const wonLeads = allLeads.filter(l => l.status === 'won').length;
@@ -56,6 +65,7 @@ export default function DashboardPage() {
 
       setRecentLeads(allLeads.slice(0, 6));
       setUpcomingFollowups(followups || []);
+      setRecentProperties(properties || []);
     } catch (err) {
       console.error('Dashboard load error:', err);
     } finally {
@@ -77,8 +87,8 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status) => `badge badge-${status}`;
   const getSourceIcon = (source) => {
-    const icons = { website: '🌐', referral: '🤝', social_media: '📱', walk_in: '🚶', cold_call: '📞', advertisement: '📢', property_portal: '🏘️', other: '📋' };
-    return icons[source] || '📋';
+    const icons = { website: <Globe size={14} />, referral: <UserPlus size={14} />, social_media: <Smartphone size={14} />, walk_in: <Footprints size={14} />, cold_call: <Phone size={14} />, advertisement: <Megaphone size={14} />, property_portal: <Building size={14} />, other: <ClipboardList size={14} /> };
+    return icons[source] || <ClipboardList size={14} />;
   };
 
   const generateAIInsights = async () => {
@@ -148,7 +158,7 @@ export default function DashboardPage() {
 
       {todaysVisits.length > 0 && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05))',
+          background: 'rgba(139, 92, 246, 0.1)',
           border: '1px solid rgba(139, 92, 246, 0.3)',
           borderRadius: 'var(--radius-md)',
           padding: '14px 18px',
@@ -170,16 +180,16 @@ export default function DashboardPage() {
 
       {/* KPI Stats */}
       <div className={styles.statsGrid}>
-        <StatCard icon="👥" label="Total Leads" value={stats.totalLeads} trend="+12% this month" trendUp={true} color="primary" delay={0} />
-        <StatCard icon="🤝" label="Active Deals" value={stats.activeDeals} trend="3 closing soon" trendUp={true} color="accent" delay={100} />
-        <StatCard icon="💰" label="Pipeline Value" value={formatCurrency(stats.pipelineValue)} trend="+8% growth" trendUp={true} color="success" delay={200} />
-        <StatCard icon="📈" label="Conversion Rate" value={`${stats.conversionRate}%`} trend="Above average" trendUp={true} color="warning" delay={300} />
+        <StatCard icon={<Users size={24} />} label="Total Leads" value={stats.totalLeads} trend="+12% this month" trendUp={true} color="primary" delay={0} />
+        <StatCard icon={<Handshake size={24} />} label="Active Deals" value={stats.activeDeals} trend="3 closing soon" trendUp={true} color="accent" delay={100} />
+        <StatCard icon={<IndianRupee size={24} />} label="Pipeline Value" value={formatCurrency(stats.pipelineValue)} trend="+8% growth" trendUp={true} color="success" delay={200} />
+        <StatCard icon={<TrendingUp size={24} />} label="Conversion Rate" value={`${stats.conversionRate}%`} trend="Above average" trendUp={true} color="warning" delay={300} />
       </div>
 
       {/* AI Insights Card */}
       <div className={styles.aiCard}>
         <div className={styles.aiHeader}>
-          <h3>✨ AI Assistant Insights</h3>
+          <h3><Sparkles size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> AI Assistant Insights</h3>
           <button 
             className="btn btn-secondary btn-sm" 
             onClick={generateAIInsights} 
@@ -200,7 +210,7 @@ export default function DashboardPage() {
             <ul className={styles.aiList}>
               {aiInsights.map((insight, i) => (
                 <li key={i} className={styles.aiListItem} style={{ animationDelay: `${i * 100}ms` }}>
-                  <span>🎯</span>
+                  <span><Crosshair size={16} /></span>
                   <div>{insight}</div>
                 </li>
               ))}
@@ -218,11 +228,11 @@ export default function DashboardPage() {
         <div className={`card ${styles.section}`}>
           <div className={styles.sectionHeader}>
             <h3>Recent Leads</h3>
-            <a href="/leads" className="btn btn-ghost btn-sm">View All →</a>
+            <a href="/leads" className="btn btn-ghost btn-sm">View All <ArrowRight size={14} style={{ marginLeft: 4 }} /></a>
           </div>
           {recentLeads.length === 0 ? (
             <div className="empty-state">
-              <span style={{ fontSize: '2.5rem' }}>👥</span>
+              <Users size={40} style={{ opacity: 0.2, marginBottom: 12 }} />
               <h3>No leads yet</h3>
               <p>Start adding leads to see them here</p>
             </div>
@@ -280,6 +290,48 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Recent Properties Section */}
+      <div className={`card ${styles.section}`} style={{ marginTop: 24 }}>
+        <div className={styles.sectionHeader}>
+          <h3>Recent Properties</h3>
+          <a href="/properties" className="btn btn-ghost btn-sm">View All Properties <ArrowRight size={14} style={{ marginLeft: 4 }} /></a>
+        </div>
+        
+        {recentProperties.length === 0 ? (
+          <div className="empty-state">
+            <Building size={40} style={{ opacity: 0.2, marginBottom: 12 }} />
+            <h3>No properties listed</h3>
+            <p>Start adding properties to showcase them here</p>
+          </div>
+        ) : (
+          <div className={styles.propertyGrid}>
+            {recentProperties.map((prop, i) => (
+              <div key={prop.id} className={styles.propertyItem} style={{ animationDelay: `${i * 100}ms` }}>
+                <div className={styles.propertyImage}>
+                  {prop.image_url ? (
+                    <img src={prop.image_url} alt={prop.title} />
+                  ) : (
+                    <div className={styles.propertyImagePlaceholder}>
+                      <Building size={24} />
+                    </div>
+                  )}
+                  <span className={`${styles.propertyStatus} badge badge-${prop.status}`}>
+                    {prop.status}
+                  </span>
+                </div>
+                <div className={styles.propertyDetails}>
+                  <h4 className={styles.propertyTitle}>{prop.title}</h4>
+                  <p className={styles.propertyAddress}>{prop.city}, {prop.state}</p>
+                  <div className={styles.propertyPrice}>
+                    {formatCurrency(prop.price)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Pipeline Summary */}

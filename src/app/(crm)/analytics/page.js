@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { IndianRupee, Users, Target, Globe, UserPlus, Smartphone, Footprints, Phone, Megaphone, Building, ClipboardList, Flame, Activity, Zap, Info } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import styles from './analytics.module.css';
 
@@ -11,6 +12,7 @@ export default function AnalyticsPage() {
   const [sourceData, setSourceData] = useState([]);
   const [funnelData, setFunnelData] = useState([]);
   const [teamPerformance, setTeamPerformance] = useState([]);
+  const [demandData, setDemandData] = useState([]);
   const [globalStats, setGlobalStats] = useState({
     totalPipeline: 0,
     avgConversion: 0,
@@ -24,9 +26,8 @@ export default function AnalyticsPage() {
 
   const loadAnalytics = async () => {
     try {
-      // 1. Fetch Source Performance
-      // Note: We use query on 'leads' directly as a fallback if the view isn't created yet
-      const { data: leads } = await supabase.from('leads').select('source, status');
+      // 1. Fetch Leads data
+      const { data: leads } = await supabase.from('leads').select('source, status, preferred_location, budget_max');
       
       const sourceMap = {};
       leads?.forEach(l => {
@@ -83,6 +84,24 @@ export default function AnalyticsPage() {
       
       setTeamPerformance(leaderboard || []);
 
+      // 5. Property Demand Heatmap Data
+      const locationMap = {};
+      leads?.forEach(l => {
+        if (!l.preferred_location) return;
+        const loc = l.preferred_location.trim().toUpperCase();
+        if (!locationMap[loc]) locationMap[loc] = { location: loc, count: 0, totalBudget: 0 };
+        locationMap[loc].count++;
+        locationMap[loc].totalBudget += Number(l.budget_max || 0);
+      });
+
+      const demand = Object.values(locationMap).map(loc => ({
+        location: loc.location,
+        inquiries: loc.count,
+        avgBudget: loc.count > 0 ? (loc.totalBudget / loc.count) : 0
+      })).sort((a, b) => b.inquiries - a.inquiries).slice(0, 8); // Top 8 locations
+      
+      setDemandData(demand);
+
     } catch (err) {
       console.error("Analytics Load Error:", err);
     } finally {
@@ -97,8 +116,17 @@ export default function AnalyticsPage() {
   };
 
   const getSourceIcon = (source) => {
-    const icons = { website: '🌐', referral: '🤝', social_media: '📱', walk_in: '🚶', cold_call: '📞', advertisement: '📢', property_portal: '🏘️', other: '📋' };
-    return icons[source] || '📋';
+    const icons = { 
+      website: <Globe size={14} />, 
+      referral: <UserPlus size={14} />, 
+      social_media: <Smartphone size={14} />, 
+      walk_in: <Footprints size={14} />, 
+      cold_call: <Phone size={14} />, 
+      advertisement: <Megaphone size={14} />, 
+      property_portal: <Building size={14} />, 
+      other: <ClipboardList size={14} /> 
+    };
+    return icons[source] || <ClipboardList size={14} />;
   };
 
   if (loading) return <div className="p-8">Loading Analytics...</div>;
@@ -111,10 +139,10 @@ export default function AnalyticsPage() {
       </div>
 
       <div className={styles.statsGrid}>
-        <StatCard icon="💰" label="Total Revenue" value={formatCurrency(globalStats.totalRevenue)} color="success" delay={0} />
-        <StatCard icon="🏦" label="Pipeline Value" value={formatCurrency(globalStats.totalPipeline)} color="primary" delay={100} />
-        <StatCard icon="🎯" label="Conversion Rate" value={`${globalStats.avgConversion}%`} color="warning" delay={200} />
-        <StatCard icon="⚡" label="Active Leads" value={globalStats.activeLeads} color="accent" delay={300} />
+        <StatCard icon={<IndianRupee size={24} />} label="Total Revenue" value={formatCurrency(globalStats.totalRevenue)} color="success" delay={0} />
+        <StatCard icon={<Activity size={24} />} label="Pipeline Value" value={formatCurrency(globalStats.totalPipeline)} color="primary" delay={100} />
+        <StatCard icon={<Target size={24} />} label="Conversion Rate" value={`${globalStats.avgConversion}%`} color="warning" delay={200} />
+        <StatCard icon={<Zap size={24} />} label="Active Leads" value={globalStats.activeLeads} color="accent" delay={300} />
       </div>
 
       <div className={styles.reportsGrid}>
@@ -180,7 +208,7 @@ export default function AnalyticsPage() {
             })}
           </div>
           <div style={{ padding: '0 24px 24px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            ℹ️ Funnel represents the distribution of all leads across status stages.
+            <Info size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Funnel represents the distribution of all leads across status stages.
           </div>
         </div>
       </div>
@@ -206,9 +234,51 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
+        {/* Property Demand Heatmap */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>Property Demand Heatmap</h3>
+            <span style={{ fontSize: '0.8rem' }}>Top Micro-markets</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, padding: '0 24px 24px' }}>
+            {demandData.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)' }}>No location data available in leads yet.</div>
+            ) : (
+              demandData.map((d, i) => {
+                const maxInquiries = Math.max(...demandData.map(x => x.inquiries));
+                const heatRatio = d.inquiries / maxInquiries;
+                // Color intensity from light orange to dark red
+                const heatColor = `rgba(255, ${150 - (heatRatio * 100)}, ${100 - (heatRatio * 80)}, 1)`;
+                
+                return (
+                  <div key={i} style={{
+                    background: heatColor,
+                    color: heatRatio > 0.5 ? 'white' : 'var(--text-color)',
+                    padding: '12px 16px',
+                    borderRadius: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minWidth: 140,
+                    flex: '1 1 auto',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    transition: 'transform 0.2s',
+                    cursor: 'default'
+                  }} className="heatmap-node">
+                    <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 4 }}>{d.location}</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.9 }}><Flame size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> {d.inquiries} Inquiries</div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: 4 }}>Avg Budget: {formatCurrency(d.avgBudget)}</div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <div className={styles.reportsGrid} style={{ marginTop: 24 }}>
         {/* Quick Reports Info */}
         <div className={styles.card} style={{ 
-          background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+          background: 'var(--primary)',
           color: 'white',
           padding: 30,
           display: 'flex',

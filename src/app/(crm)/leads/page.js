@@ -1,9 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { Search, Flame, Snowflake, CircleDot, Sparkles, Home, Mic, Loader2, Users, Bot } from 'lucide-react';
 import Modal from '@/components/Modal';
+import VoiceRecorder from '@/components/VoiceRecorder';
 import styles from './leads.module.css';
 
 const SOURCES = ['website', 'referral', 'social_media', 'walk_in', 'cold_call', 'advertisement', 'property_portal', 'other'];
@@ -34,6 +36,10 @@ export default function LeadsPage() {
   const [filterBudget, setFilterBudget] = useState('all');
   const [filterAiScore, setFilterAiScore] = useState('all');
   const [saving, setSaving] = useState(false);
+  
+  // Call Recording Upload State
+  const [isUploadingCall, setIsUploadingCall] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user && userProfile) {
@@ -55,31 +61,20 @@ export default function LeadsPage() {
 
   const loadLeads = async () => {
     try {
-      // Use simpler join syntax to avoid FK name mismatch issues
       const { data, error } = await supabase
         .from('leads')
         .select('*, follow_ups(*), assigned_profile:profiles(full_name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
 
-      // Calculate AI Score
       const scoredLeads = (data || []).map(lead => {
-        let score = 10; // Base score
-        
-        // Budget match
+        let score = 10; 
         if (lead.budget_max > 0) score += 20;
-        
-        // Site visit done
         const hasSiteVisit = lead.follow_ups?.some(f => f.follow_up_type === 'site_visit' && f.status === 'completed');
         if (hasSiteVisit) score += 30;
-        
-        // Recent activity (last contacted < 2 days)
         const daysSinceUpdate = (new Date() - new Date(lead.updated_at)) / (1000 * 60 * 60 * 24);
         if (daysSinceUpdate <= 2) score += 20;
-        
-        // Priority high/urgent
         if (lead.priority === 'urgent' || lead.priority === 'high') score += 20;
-        
         score = Math.min(100, score);
         
         let aiLabel = 'Cold';
@@ -131,7 +126,6 @@ export default function LeadsPage() {
     }
     setSaving(true);
     try {
-      // Ensure assigned_to is null if empty string, and convert budget to numbers
       const leadData = { 
         ...form, 
         budget_min: Number(form.budget_min) || 0, 
@@ -168,9 +162,56 @@ export default function LeadsPage() {
 
   const openViewModal = async (lead) => {
     setViewingLead(lead);
-    // Fetch communications
-    const { data } = await supabase.from('communications').select('*').eq('lead_id', lead.id).order('created_at', { ascending: false });
+    loadCommunications(lead.id);
+  };
+
+  const loadCommunications = async (leadId) => {
+    const { data } = await supabase.from('communications').select('*').eq('lead_id', leadId).order('created_at', { ascending: false });
     setCommunications(data || []);
+  };
+
+  const handleCallUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !viewingLead) return;
+    
+    setIsUploadingCall(true);
+    toast.info("Uploading and transcribing call...");
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('summarize_call', 'true');
+
+      const response = await fetch('/api/ai/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      const summaryContent = `Call Recording Processed:\n\nTranscript Snippet: "${data.transcript.substring(0, 150)}..."\n\nAI Summary: ${data.extractedData?.summary}\n\nAction Items: ${(data.extractedData?.action_items || []).join(", ")}`;
+
+      const { error } = await supabase.from('communications').insert([{
+        lead_id: viewingLead.id,
+        user_id: user.id,
+        channel: 'whatsapp',
+        direction: 'inbound',
+        content: summaryContent,
+        status: 'delivered'
+      }]);
+
+      if (error) throw error;
+      
+      toast.success('Call transcribed and summarized!');
+      loadCommunications(viewingLead.id);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to transcribe call recording.');
+    } finally {
+      setIsUploadingCall(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleAiAssist = async (action) => {
@@ -190,7 +231,6 @@ export default function LeadsPage() {
         setViewingLead({ ...viewingLead, score: data.score, temperature: data.temperature });
         loadLeads();
       } else {
-        // Log the suggested message as a draft communication
         const { error } = await supabase.from('communications').insert({
           lead_id: viewingLead.id,
           channel: 'whatsapp',
@@ -201,7 +241,7 @@ export default function LeadsPage() {
         });
         if (error) throw error;
         toast.success('AI Suggestion generated!');
-        openViewModal(viewingLead); // reload comms
+        loadCommunications(viewingLead.id);
       }
     } catch (err) {
       toast.error('AI Assist failed.');
@@ -219,6 +259,31 @@ export default function LeadsPage() {
       loadLeads();
     } catch (err) {
       toast.error('Failed to delete lead');
+    }
+  };
+
+  const handleVoiceLead = async (extractedData, transcript) => {
+    try {
+      const newLead = {
+        full_name: extractedData?.full_name || 'Voice Lead (Needs Name)',
+        phone: extractedData?.phone || '0000000000',
+        email: extractedData?.email || null,
+        budget_max: extractedData?.budget_max || 0,
+        preferred_location: extractedData?.preferred_location || null,
+        property_type: extractedData?.property_type || 'residential',
+        notes: `Extracted from Voice Note: "${transcript}"\n\nAI Extracted Notes: ${extractedData?.notes || ''}`,
+        source: 'walk_in',
+        user_id: user.id
+      };
+      
+      const { data, error } = await supabase.from('leads').insert([newLead]);
+      if (error) throw error;
+      
+      toast.success('Lead created from voice note!');
+      loadLeads();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save voice lead to database.');
     }
   };
 
@@ -246,21 +311,20 @@ export default function LeadsPage() {
   const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <div>
+    <div className={styles.container}>
       <div className={styles.pageHeader}>
         <div>
           <h1>Leads</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 4 }}>
-            Manage all your leads — {leads.length} total
-          </p>
+          <p className="text-muted">Manage your incoming inquiries and prospects</p>
         </div>
-        <button className="btn btn-primary" onClick={openAddModal}>+ Add Lead</button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button className="btn btn-primary" onClick={() => setModalOpen(true)}>+ Add Lead</button>
+        </div>
       </div>
 
-      {/* Filters */}
       <div className={styles.filters}>
         <div className={styles.searchBox}>
-          <span>🔍</span>
+          <span><Search size={16} /></span>
           <input
             type="text"
             placeholder="Search by name, phone..."
@@ -289,9 +353,9 @@ export default function LeadsPage() {
         </select>
         <select className="form-select" value={filterAiScore} onChange={e => setFilterAiScore(e.target.value)} style={{ width: 130 }}>
           <option value="all">AI Score (All)</option>
-          <option value="hot">🔥 Hot</option>
-          <option value="warm">🟡 Warm</option>
-          <option value="cold">❄️ Cold</option>
+          <option value="hot">Hot</option>
+          <option value="warm">Warm</option>
+          <option value="cold">Cold</option>
         </select>
         <select className="form-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ width: 130 }}>
           <option value="all">All Status</option>
@@ -303,7 +367,6 @@ export default function LeadsPage() {
         </select>
       </div>
 
-      {/* Table */}
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1,2,3,4,5].map(i => <div key={i} className="skeleton" style={{ height: 56 }} />)}
@@ -311,7 +374,7 @@ export default function LeadsPage() {
       ) : filteredLeads.length === 0 ? (
         <div className="card">
           <div className="empty-state">
-            <span style={{ fontSize: '3rem' }}>👥</span>
+            <Users size={48} style={{ opacity: 0.2, marginBottom: 16 }} />
             <h3>No leads found</h3>
             <p>{search || filterStatus !== 'all' || filterSource !== 'all' ? 'Try adjusting your filters' : 'Click "Add Lead" to get started'}</p>
           </div>
@@ -340,7 +403,7 @@ export default function LeadsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
                         width: 34, height: 34, borderRadius: 'var(--radius-md)',
-                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                        background: 'var(--primary)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontWeight: 700, fontSize: '0.8rem', color: 'white', flexShrink: 0
                       }}>
@@ -353,12 +416,12 @@ export default function LeadsPage() {
                     {lead.temperature ? (
                       <div style={{ 
                         display: 'inline-flex', alignItems: 'center', gap: 4, 
-                        padding: '4px 8px', borderRadius: '20px', 
+                        padding: '4px 8px', borderRadius: 0, 
                         background: lead.temperature === 'hot' ? 'rgba(0, 184, 148, 0.1)' : lead.temperature === 'warm' ? 'rgba(253, 203, 110, 0.1)' : 'rgba(255, 107, 107, 0.1)', 
                         color: lead.temperature === 'hot' ? 'var(--success)' : lead.temperature === 'warm' ? 'var(--warning)' : 'var(--danger)', 
                         fontWeight: 600, fontSize: '0.75rem' 
                       }}>
-                        {lead.temperature === 'hot' ? '🔥' : lead.temperature === 'warm' ? '🟡' : '❄️'} {lead.temperature} ({lead.score || 0})
+                        {lead.temperature === 'hot' ? <Flame size={12} style={{display:'inline',verticalAlign:'middle',color:'#ff6b6b'}} /> : lead.temperature === 'warm' ? <CircleDot size={12} style={{display:'inline',verticalAlign:'middle',color:'#fdcb6e'}} /> : <Snowflake size={12} style={{display:'inline',verticalAlign:'middle',color:'#74b9ff'}} />} {lead.temperature} ({lead.score || 0})
                       </div>
                     ) : (
                       <span className="text-muted" style={{fontSize: '0.8rem'}}>Unscored</span>
@@ -373,7 +436,13 @@ export default function LeadsPage() {
                   <td><span style={{ textTransform: 'capitalize' }}>{lead.source?.replace(/_/g, ' ')}</span></td>
                   <td><span className={`badge badge-${lead.status}`}>{lead.status}</span></td>
                   <td><span className={`badge badge-priority-${lead.priority}`}>{lead.priority}</span></td>
-                  <td>{lead.budget_max ? formatCurrency(lead.budget_max) : '-'}</td>
+                  <td>
+                    {lead.budget_min || lead.budget_max ? (
+                      lead.budget_min && lead.budget_max && lead.budget_min !== lead.budget_max
+                        ? `${formatCurrency(lead.budget_min)} - ${formatCurrency(lead.budget_max)}`
+                        : formatCurrency(lead.budget_max || lead.budget_min)
+                    ) : '-'}
+                  </td>
                   <td>
                     {lead.assigned_to 
                       ? (lead.assigned_profile?.full_name || 'Agent') 
@@ -394,7 +463,6 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -476,7 +544,6 @@ export default function LeadsPage() {
         </div>
       </Modal>
 
-      {/* View Details & AI Modal */}
       <Modal
         isOpen={!!viewingLead}
         onClose={() => setViewingLead(null)}
@@ -486,7 +553,7 @@ export default function LeadsPage() {
         {viewingLead && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 24 }}>
             <div>
-              <div style={{ padding: 16, background: 'var(--bg-elevated)', borderRadius: 12, marginBottom: 16 }}>
+              <div style={{ padding: 16, background: 'var(--bg-elevated)', borderRadius: 0, marginBottom: 16 }}>
                 <h3 style={{ margin: '0 0 8px 0' }}>{viewingLead.full_name}</h3>
                 <p className="text-muted" style={{ margin: 0 }}>{viewingLead.phone}</p>
                 <div style={{ marginTop: 12 }}>
@@ -496,21 +563,30 @@ export default function LeadsPage() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <button className="btn btn-secondary" onClick={() => handleAiAssist('score')} disabled={aiLoading}>
-                  {aiLoading ? 'Analyzing...' : '🧠 AI Lead Score'}
+                  {aiLoading ? 'Analyzing...' : 'AI Lead Score'}
                 </button>
                 <button className="btn btn-secondary" onClick={() => handleAiAssist('suggest_followup')} disabled={aiLoading}>
-                  {aiLoading ? 'Generating...' : '✨ Draft WhatsApp Reply'}
+                  {aiLoading ? 'Generating...' : <><Sparkles size={14} style={{display:'inline',verticalAlign:'middle'}} /> Draft WhatsApp Reply</>}
                 </button>
                 <button className="btn btn-secondary" onClick={() => handleAiAssist('recommend_properties')} disabled={aiLoading}>
-                  {aiLoading ? 'Finding...' : '🏠 Auto Recommend Properties'}
+                  {aiLoading ? 'Finding...' : <><Home size={14} style={{display:'inline',verticalAlign:'middle'}} /> Auto Recommend Properties</>}
                 </button>
               </div>
             </div>
 
-            <div>
-              <h3>Communications & Activity Log</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border-color)', paddingLeft: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 style={{ margin: 0 }}>Timeline & Communications</h3>
+                <div>
+                  <input type="file" accept="audio/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleCallUpload} />
+                  <button className="btn btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingCall}>
+                    {isUploadingCall ? <><Loader2 size={14} style={{display:'inline',verticalAlign:'middle'}} /> Analyzing...</> : <><Mic size={14} style={{display:'inline',verticalAlign:'middle'}} /> Upload Call</>}
+                  </button>
+                </div>
+              </div>
+              
               <div style={{ 
-                marginTop: 16, border: '1px solid var(--border-color)', borderRadius: 8, height: 300, overflowY: 'auto', padding: 16,
+                border: '1px solid var(--border-color)', borderRadius: 0, height: 300, overflowY: 'auto', padding: 16,
                 background: 'var(--bg-card)'
               }}>
                 {communications.length === 0 ? (
@@ -519,12 +595,12 @@ export default function LeadsPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {communications.map(msg => (
                       <div key={msg.id} style={{
-                        padding: 12, borderRadius: 8,
+                        padding: 12, borderRadius: 0,
                         background: msg.status === 'draft' ? 'rgba(253, 203, 110, 0.1)' : 'var(--bg-elevated)',
                         borderLeft: `4px solid ${msg.is_automated ? 'var(--primary)' : 'var(--success)'}`
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.8rem' }}>
-                          <strong>{msg.is_automated ? '🤖 Automated' : 'Agent'} ({msg.channel})</strong>
+                          <strong>{msg.is_automated ? <><Bot size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Automated</> : 'Agent'} ({msg.channel})</strong>
                           <span className="text-muted">{new Date(msg.created_at).toLocaleTimeString()}</span>
                         </div>
                         <p style={{ margin: 0, fontSize: '0.9rem' }}>{msg.content}</p>

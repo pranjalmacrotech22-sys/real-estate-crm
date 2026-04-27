@@ -3,6 +3,19 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { 
+  Fingerprint, 
+  Handshake, 
+  Receipt, 
+  FileText, 
+  Paperclip, 
+  Sparkles, 
+  Upload, 
+  FolderOpen, 
+  Check, 
+  Download, 
+  FileSignature 
+} from 'lucide-react';
 import Modal from '@/components/Modal';
 import styles from './documents.module.css';
 
@@ -182,8 +195,14 @@ export default function DocumentsPage() {
   const filteredDocs = filter === 'all' ? documents : documents.filter(d => d.document_type === filter);
 
   const getDocIcon = (type) => {
-    const icons = { kyc: '🆔', agreement: '🤝', invoice: '🧾', proposal: '📄', other: '📎' };
-    return icons[type] || '📎';
+    const icons = { 
+      kyc: <Fingerprint size={20} />, 
+      agreement: <Handshake size={20} />, 
+      invoice: <Receipt size={20} />, 
+      proposal: <FileText size={20} />, 
+      other: <Paperclip size={20} /> 
+    };
+    return icons[type] || <Paperclip size={20} />;
   };
 
   return (
@@ -194,8 +213,12 @@ export default function DocumentsPage() {
           <p className="text-muted">Manage KYC, generate agreements, and track digital signatures.</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary" onClick={() => setGenerateModalOpen(true)}>✨ Auto-Generate</button>
-          <button className="btn btn-primary" onClick={() => setUploadModalOpen(true)}>↑ Upload File</button>
+          <button className="btn btn-secondary" onClick={() => setGenerateModalOpen(true)}>
+            <Sparkles size={16} style={{ marginRight: 8 }} /> Auto-Generate
+          </button>
+          <button className="btn btn-primary" onClick={() => setUploadModalOpen(true)}>
+            <Upload size={16} style={{ marginRight: 8 }} /> Upload File
+          </button>
         </div>
       </div>
 
@@ -213,11 +236,11 @@ export default function DocumentsPage() {
 
       {loading ? (
         <div className={styles.grid}>
-          {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 200, borderRadius: 12 }} />)}
+          {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 200, borderRadius: 0 }} />)}
         </div>
       ) : documents.length === 0 ? (
         <div className="empty-state card">
-          <span style={{ fontSize: '3rem' }}>📂</span>
+          <FolderOpen size={48} style={{ opacity: 0.2, marginBottom: 16 }} />
           <h3>No documents found</h3>
           <p>Upload a file or generate a new agreement to get started.</p>
         </div>
@@ -244,15 +267,15 @@ export default function DocumentsPage() {
               <div className={styles.docActions}>
                 {doc.status === 'pending_signature' ? (
                   <button className={`${styles.actionBtn} ${styles.actionBtnPrimary}`} onClick={() => handleSignDocument(doc.id)}>
-                    ✍️ E-Sign
+                    <FileSignature size={14} style={{ marginRight: 6 }} /> E-Sign
                   </button>
                 ) : (
                   <button className={styles.actionBtn} disabled style={{ opacity: 0.5 }}>
-                    ✓ Signed
+                    <Check size={14} style={{ marginRight: 6 }} /> Signed
                   </button>
                 )}
                 <button className={styles.actionBtn} onClick={() => handleDownload(doc.file_url, doc.title)}>
-                  ↓ Download
+                  <Download size={14} style={{ marginRight: 6 }} /> Download
                 </button>
               </div>
             </div>
@@ -289,7 +312,7 @@ export default function DocumentsPage() {
               className={styles.fileUploadArea}
               onClick={() => fileInputRef.current?.click()}
             >
-              <span style={{ fontSize: '2rem' }}>📄</span>
+              <FileText size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
               <p>{uploadForm.file ? uploadForm.file.name : 'Click to select a PDF or Image'}</p>
               <input 
                 type="file" 

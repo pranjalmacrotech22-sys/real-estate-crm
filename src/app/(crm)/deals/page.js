@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { Handshake, User, Home, CalendarDays, Pencil, Trash2 } from 'lucide-react';
 import Modal from '@/components/Modal';
 import styles from './deals.module.css';
 
@@ -159,7 +160,7 @@ export default function DealsPage() {
       {loading ? (
         <div className={styles.dealsGrid}>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 200 }} />)}</div>
       ) : deals.length === 0 ? (
-        <div className="card"><div className="empty-state"><span style={{ fontSize: '3rem' }}>🤝</span><h3>No deals yet</h3><p>Create your first deal to start tracking revenue</p></div></div>
+        <div className="card"><div className="empty-state"><span style={{ fontSize: '3rem' }}><Handshake size={48} /></span><h3>No deals yet</h3><p>Create your first deal to start tracking revenue</p></div></div>
       ) : (
         <div className={styles.dealsGrid}>
           {deals.map((deal, i) => (
@@ -199,9 +200,9 @@ export default function DealsPage() {
               </div>
 
               <div className={styles.dealMeta}>
-                {deal.leads?.full_name && <span>👤 {deal.leads.full_name}</span>}
-                {deal.properties?.title && <span>🏠 {deal.properties.title}</span>}
-                {deal.expected_close_date && <span>📅 {new Date(deal.expected_close_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
+                {deal.leads?.full_name && <span><User size={12} style={{display:'inline',verticalAlign:'middle'}} /> {deal.leads.full_name}</span>}
+                {deal.properties?.title && <span><Home size={12} style={{display:'inline',verticalAlign:'middle'}} /> {deal.properties.title}</span>}
+                {deal.expected_close_date && <span><CalendarDays size={12} style={{display:'inline',verticalAlign:'middle'}} /> {new Date(deal.expected_close_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
               </div>
 
               <div className={styles.dealFooter}>
@@ -209,8 +210,8 @@ export default function DealsPage() {
                   Commission: {formatCurrency(Number(deal.deal_value || 0) * Number(deal.commission_percent || 2) / 100)}
                 </span>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(deal)}>✏️</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => deleteDeal(deal.id)}>🗑️</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => openEdit(deal)}><Pencil size={14} /></button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => deleteDeal(deal.id)}><Trash2 size={14} /></button>
                 </div>
               </div>
             </div>

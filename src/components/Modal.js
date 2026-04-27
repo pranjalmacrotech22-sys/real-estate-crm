@@ -1,5 +1,6 @@
 'use client';
 import { useEffect } from 'react';
+import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, title, children, footer, size = 'default' }) {
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
       <div className="modal" style={{ maxWidth }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{title}</h3>
-          <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
+          <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={18} /></button>
         </div>
         <div className="modal-body">
           {children}

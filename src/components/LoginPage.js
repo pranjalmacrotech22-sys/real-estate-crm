@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { Building2, Mail } from 'lucide-react';
 import styles from './LoginPage.module.css';
 
 export default function LoginPage() {
@@ -127,7 +128,7 @@ export default function LoginPage() {
 
       <div className={styles.card}>
         <div className={styles.header}>
-          <div className={styles.logoIcon}>🏢</div>
+          <div className={styles.logoIcon}><Building2 size={32} color="white" /></div>
           <h1 className={styles.title}>RealCRM</h1>
           <p className={styles.subtitle}>
             {step === 'email' ? 'Sign in to your account' : 'Enter the verification code'}
@@ -195,7 +196,7 @@ export default function LoginPage() {
             {success && <div className={styles.successMsg}>{success}</div>}
 
             <div className={styles.emailBadge}>
-              <span>📧</span>
+              <span><Mail size={16} /></span>
               <span>{email}</span>
               <button type="button" className={styles.changeBtn} onClick={goBack}>Change</button>
             </div>

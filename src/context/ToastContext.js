@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useCallback } from 'react';
+import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
 
 const ToastContext = createContext({});
 
@@ -27,10 +28,10 @@ export function ToastProvider({ children }) {
       <div className="toast-container">
         {toasts.map(t => (
           <div key={t.id} className={`toast toast-${t.type}`}>
-            {t.type === 'success' && <span>✓</span>}
-            {t.type === 'error' && <span>✕</span>}
-            {t.type === 'warning' && <span>⚠</span>}
-            {t.type === 'info' && <span>ℹ</span>}
+            {t.type === 'success' && <CheckCircle size={18} />}
+            {t.type === 'error' && <XCircle size={18} />}
+            {t.type === 'warning' && <AlertTriangle size={18} />}
+            {t.type === 'info' && <Info size={18} />}
             <span>{t.message}</span>
           </div>
         ))}

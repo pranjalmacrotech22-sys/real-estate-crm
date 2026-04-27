@@ -13,51 +13,51 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user ?? null;
+        if (mounted) setUser(currentUser);
+        
+        if (currentUser) {
+          const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+          if (mounted && data) setUserProfile(data);
+        }
+      } catch (err) {
+        console.error("Auth initialization error:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       
-      if (currentUser) {
-        await fetchProfile(currentUser.id);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    const fetchProfile = async (userId) => {
-      try {
-        const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-        if (data) {
-          setUserProfile(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        setLoading(true);
+      // Only re-fetch profile on explicit SIGN_IN, avoid blocking UI on tab focus (TOKEN_REFRESHED, etc)
+      if (event === 'SIGNED_IN' && currentUser) {
         try {
           const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
-          if (data) setUserProfile(data);
-        } finally {
-          setLoading(false);
+          if (mounted && data) setUserProfile(data);
+        } catch (err) {
+          console.error('Failed to fetch profile on sign in', err);
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
-        setLoading(false);
+        // Do not force setLoading(false) here, we don't want to mess with navigation state
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Send OTP to email

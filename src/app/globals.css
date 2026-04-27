@@ -59,11 +59,11 @@
   --header-height: 64px;
   
   /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
   
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -164,10 +164,7 @@ h4 { font-size: 1.1rem; }
 
 /* ============ UTILITY ============ */
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary-light), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
 }
 
 .glass {
@@ -311,7 +308,7 @@ h4 { font-size: 1.1rem; }
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: var(--primary);
   color: white;
   box-shadow: 0 4px 14px var(--primary-glow);
 }
@@ -333,13 +330,13 @@ h4 { font-size: 1.1rem; }
 }
 
 .btn-success {
-  background: linear-gradient(135deg, var(--success), #00A878);
+  background: var(--success);
   color: white;
   box-shadow: 0 4px 14px rgba(0, 184, 148, 0.3);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--danger), #E55039);
+  background: var(--danger);
   color: white;
   box-shadow: 0 4px 14px rgba(255, 107, 107, 0.3);
 }
@@ -544,9 +541,8 @@ h4 { font-size: 1.1rem; }
 
 /* ============ SKELETON ============ */
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-card-hover) 50%, var(--bg-elevated) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  background: var(--bg-secondary);
+  animation: pulse 1.5s infinite;
   border-radius: var(--radius-md);
 }
 

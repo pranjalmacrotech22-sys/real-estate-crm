@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { Home, Building2, Ruler, Trees, Building, Briefcase, Store, HardHat, Search, MapPin, Maximize, BedDouble, Bath, Pencil, Trash2 } from 'lucide-react';
 import Modal from '@/components/Modal';
 import styles from './properties.module.css';
 
@@ -174,8 +175,8 @@ export default function PropertiesPage() {
   };
 
   const typeIcons = {
-    residential: '🏠', commercial: '🏢', plot: '📐', villa: '🏡',
-    apartment: '🏬', office: '💼', shop: '🏪', other: '🏗️'
+    residential: <Home size={20} />, commercial: <Building2 size={20} />, plot: <Ruler size={20} />, villa: <Trees size={20} />,
+    apartment: <Building size={20} />, office: <Briefcase size={20} />, shop: <Store size={20} />, other: <HardHat size={20} />
   };
 
   return (
@@ -192,7 +193,7 @@ export default function PropertiesPage() {
 
       <div className={styles.filters}>
         <div className="search-box" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', gap: 8 }}>
-          <span>🔍</span>
+          <span><Search size={16} /></span>
           <input
             type="text"
             placeholder="Search properties..."
@@ -202,7 +203,7 @@ export default function PropertiesPage() {
           />
         </div>
         <div className="search-box" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', gap: 8 }}>
-          <span>📍</span>
+          <span><MapPin size={16} /></span>
           <input
             type="text"
             placeholder="City/Location..."
@@ -230,7 +231,7 @@ export default function PropertiesPage() {
       {loading ? (
         <div className={styles.propGrid}>{[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 260 }} />)}</div>
       ) : filtered.length === 0 ? (
-        <div className="card"><div className="empty-state"><span style={{ fontSize: '3rem' }}>🏠</span><h3>No properties found</h3><p>Add your first property listing</p></div></div>
+        <div className="card"><div className="empty-state"><span style={{ fontSize: '3rem' }}><Home size={48} /></span><h3>No properties found</h3><p>Add your first property listing</p></div></div>
       ) : (
         <div className={styles.propGrid}>
           {filtered.map((prop, i) => (
@@ -239,7 +240,7 @@ export default function PropertiesPage() {
                 className={styles.propImage} 
                 style={prop.image_url ? { backgroundImage: `url(${prop.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
               >
-                {!prop.image_url && <span className={styles.propTypeIcon}>{typeIcons[prop.property_type] || '🏗️'}</span>}
+                {!prop.image_url && <span className={styles.propTypeIcon}>{typeIcons[prop.property_type] || <HardHat size={20} />}</span>}
                 <span className={statusBadge(prop.status)} style={{ position: 'absolute', top: 12, right: 12 }}>
                   {prop.status?.replace(/_/g, ' ')}
                 </span>
@@ -247,14 +248,14 @@ export default function PropertiesPage() {
 
               <div className={styles.propBody}>
                 <h4 className={styles.propTitle}>{prop.title}</h4>
-                <p className={styles.propAddress}>📍 {prop.address}{prop.city ? `, ${prop.city}` : ''}</p>
+                <p className={styles.propAddress}><MapPin size={12} style={{display:'inline',verticalAlign:'middle'}} /> {prop.address}{prop.city ? `, ${prop.city}` : ''}</p>
                 
                 <div className={styles.propPrice}>{formatCurrency(prop.price)}</div>
 
                 <div className={styles.propDetails}>
-                  {prop.area_sqft > 0 && <span>📐 {prop.area_sqft} sqft</span>}
-                  {prop.bedrooms > 0 && <span>🛏️ {prop.bedrooms} BHK</span>}
-                  {prop.bathrooms > 0 && <span>🚿 {prop.bathrooms} Bath</span>}
+                  {prop.area_sqft > 0 && <span><Maximize size={12} style={{display:'inline',verticalAlign:'middle'}} /> {prop.area_sqft} sqft</span>}
+                  {prop.bedrooms > 0 && <span><BedDouble size={12} style={{display:'inline',verticalAlign:'middle'}} /> {prop.bedrooms} BHK</span>}
+                  {prop.bathrooms > 0 && <span><Bath size={12} style={{display:'inline',verticalAlign:'middle'}} /> {prop.bathrooms} Bath</span>}
                 </div>
 
                 <div className={styles.propFooter}>
@@ -262,8 +263,8 @@ export default function PropertiesPage() {
                     {prop.property_type}
                   </span>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(prop)}>✏️</button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => deleteProp(prop.id)}>🗑️</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(prop)}><Pencil size={14} /></button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => deleteProp(prop.id)}><Trash2 size={14} /></button>
                   </div>
                 </div>
               </div>
@@ -343,7 +344,7 @@ export default function PropertiesPage() {
             {uploadingImage && <div style={{ fontSize: '0.85rem', color: 'var(--primary)', marginTop: 4 }}>Uploading image...</div>}
             {form.image_url && (
               <div style={{ marginTop: '12px' }}>
-                <img src={form.image_url} alt="Property Preview" style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }} />
+                <img src={form.image_url} alt="Property Preview" style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: 0, border: '1px solid var(--border)' }} />
               </div>
             )}
           </div>

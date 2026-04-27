@@ -36,7 +36,7 @@
 
 .propImage {
   height: 140px;
-  background: linear-gradient(135deg, var(--bg-elevated), var(--bg-secondary));
+  background: var(--bg-elevated);
   display: flex;
   align-items: center;
   justify-content: center;

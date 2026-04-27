@@ -2,15 +2,18 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import styles from './Sidebar.module.css';
+import { LayoutDashboard, Users, RefreshCw, CalendarCheck, Building2, Handshake, Home, FileText, UserCheck, BarChart3, Briefcase, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const navItems = [
-  { href: '/dashboard', icon: '📊', label: 'Dashboard' },
-  { href: '/leads', icon: '👥', label: 'Leads' },
-  { href: '/pipeline', icon: '🔄', label: 'Pipeline' },
-  { href: '/followups', icon: '📅', label: 'Follow-ups' },
-  { href: '/deals', icon: '🤝', label: 'Deals' },
-  { href: '/properties', icon: '🏠', label: 'Properties' },
-  { href: '/documents', icon: '📄', label: 'Documents' },
+  { href: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+  { href: '/leads', icon: <Users size={20} />, label: 'Leads' },
+  { href: '/pipeline', icon: <RefreshCw size={20} />, label: 'Pipeline' },
+  { href: '/followups', icon: <CalendarCheck size={20} />, label: 'Follow-ups' },
+  { href: '/inventory', icon: <Building2 size={20} />, label: 'Inventory' },
+  { href: '/deals', icon: <Handshake size={20} />, label: 'Deals' },
+  { href: '/properties', icon: <Home size={20} />, label: 'Properties' },
+  { href: '/documents', icon: <FileText size={20} />, label: 'Documents' },
+  { href: '/partners', icon: <UserCheck size={20} />, label: 'Partners' },
 ];
 
 import { useAuth } from '@/context/AuthContext';
@@ -24,8 +27,8 @@ export default function Sidebar({ collapsed, onToggle }) {
   const currentNavItems = [
     ...navItems,
     ...(isAdmin ? [
-      { href: '/analytics', icon: '📈', label: 'Analytics' },
-      { href: '/team', icon: '👔', label: 'Team' }
+      { href: '/analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
+      { href: '/team', icon: <Briefcase size={20} />, label: 'Team' }
     ] : [])
   ];
 
@@ -33,7 +36,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
       <div className={styles.logo}>
         <div className={styles.logoIcon}>
-          <span>🏢</span>
+          <Building2 size={24} />
         </div>
         {!collapsed && (
           <div className={styles.logoText}>
@@ -60,7 +63,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       </nav>
 
       <button className={styles.collapseBtn} onClick={onToggle}>
-        <span>{collapsed ? '→' : '←'}</span>
+        <span>{collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</span>
       </button>
     </aside>
   );

@@ -1,6 +1,7 @@
 'use client';
 import { useAuth } from '@/context/AuthContext';
 import styles from './Header.module.css';
+import { Search, Bell, LogOut } from 'lucide-react';
 
 export default function Header({ collapsed }) {
   const { user, userProfile, signOut } = useAuth();
@@ -9,7 +10,7 @@ export default function Header({ collapsed }) {
     <header className={styles.header} style={{ left: collapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)' }}>
       <div className={styles.left}>
         <div className={styles.searchBox}>
-          <span className={styles.searchIcon}>🔍</span>
+          <span className={styles.searchIcon}><Search size={16} /></span>
           <input 
             type="text" 
             placeholder="Search leads, deals, properties..." 
@@ -21,7 +22,7 @@ export default function Header({ collapsed }) {
       
       <div className={styles.right}>
         <button className={styles.iconBtn} title="Notifications">
-          <span>🔔</span>
+          <Bell size={20} />
           <div className={styles.notifDot}></div>
         </button>
         
@@ -34,7 +35,7 @@ export default function Header({ collapsed }) {
             <span className={styles.userRole} style={{textTransform:'capitalize'}}>{userProfile?.role || 'Agent'}</span>
           </div>
           <button className={styles.logoutBtn} onClick={signOut} title="Sign Out">
-            ⏻
+            <LogOut size={16} />
           </button>
         </div>
       </div>

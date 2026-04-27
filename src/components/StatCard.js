@@ -1,4 +1,5 @@
 'use client';
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export default function StatCard({ icon, label, value, trend, trendUp, color = 'primary', delay = 0 }) {
   const colorMap = {
@@ -15,7 +16,7 @@ export default function StatCard({ icon, label, value, trend, trendUp, color = '
     <div
       className="card animate-fadeInUp"
       style={{
-        background: `linear-gradient(135deg, ${c.bg}, var(--bg-card))`,
+        background: c.bg,
         borderColor: c.border,
         animationDelay: `${delay}ms`,
         animationFillMode: 'backwards',
@@ -39,7 +40,7 @@ export default function StatCard({ icon, label, value, trend, trendUp, color = '
               gap: 4,
               marginTop: 6
             }}>
-              {trendUp ? '↑' : '↓'} {trend}
+              {trendUp ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} {trend}
             </span>
           )}
         </div>
@@ -51,7 +52,8 @@ export default function StatCard({ icon, label, value, trend, trendUp, color = '
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '1.5rem'
+          fontSize: '1.5rem',
+          color: c.icon
         }}>
           {icon}
         </div>
